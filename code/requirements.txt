@@ -1,0 +1,33 @@
+# S-OWMI V1 — dependencias Python
+# Instalar con: pip install -r requirements.txt
+
+# Inferencia y tokenización (Paso 1, Paso 2-6)
+transformers>=4.40.0
+torch>=2.1.0
+accelerate>=0.27.0
+sentencepiece>=0.2.0
+
+# Estadísticas (stats.py) — solo stdlib + scipy opcional
+scipy>=1.12.0
+
+# Judge con LLM externo (judge.py, opcional)
+openai>=1.20.0
+
+# Datos y análisis (score_scorecard.py, todos)
+pandas>=2.2.0
+
+# Figuras (headline figure)
+matplotlib>=3.8.0
+
+# Utilidades
+tqdm>=4.66.0
+
+# Nota sobre compute:
+# - Paso 1 (tokenizer_fertility.py): solo CPU, rápido (~1 min)
+# - Pasos 2-6 (run_inference.py): requiere GPU para velocidad razonable
+#   Qwen2.5-7B-Instruct: ~14 GB VRAM (fp16)
+#   Llama-3.1-8B-Instruct: ~16 GB VRAM (fp16)
+#   Con 4-bit quantization (bitsandbytes): ~4-6 GB VRAM
+#   En CPU: ~20-60 min para 200 inferencias (factible overnight)
+# - judge.py con GPT-4o: requiere OPENAI_API_KEY en entorno
+# - judge.py --rule-based: sin dependencias externas, más rápido, menos preciso
