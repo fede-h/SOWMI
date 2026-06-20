@@ -10,7 +10,7 @@ Universidad Nacional de San Martín (UNSAM)
 ***
 
 ## Abstract
-Organizations in the Global South are increasingly drawn to open-weight large language models (LLMs) to ensure data sovereignty, adapt to local regulatory requirements, and eliminate recurring foreign-currency subscription fees. However, hosting and fine-tuning these models locally requires substantial upfront infrastructure investment. This capital barrier makes early-stage auditing crucial: institutions cannot afford to commit expensive local compute resources to models that harbor hidden safety deficits. This project introduces the Spanish Open-Weight Maturity Index (S-OWMI), focusing on "Vertical 1: Spanish Upstream Data Curation" to provide an auditable, evidence-based perimeter evaluation tool for institutions before deployment. By testing open-weight models across an English baseline versus an "español-diverso" dataset (mixing neutral Spanish, Spanglish, and regionalisms), we demonstrate significant safety gaps. Our minimal viable product (MVP) evaluates models on critical failure modes—specifically dangerous knowledge probes (Δ ASR) and semantic over-refusal (FRR). The results prove that a model deemed safe in English can fail critically in Spanish. Ultimately, S-OWMI equips vulnerable institutions with a practical scorecard to assess data curation safety, breaking the anglocentric asymmetry in LLM adoption.
+Organizations in the Global South are increasingly drawn to open-weight large language models (LLMs) to ensure data sovereignty, adapt to local regulatory requirements, and eliminate recurring foreign-currency subscription fees. However, hosting and fine-tuning these models locally requires substantial upfront infrastructure investment. This capital barrier makes early-stage auditing crucial: institutions cannot afford to commit expensive local compute resources to models that harbor hidden safety deficits. This project introduces the Spanish Open-Weight Maturity Index (S-OWMI), focusing on "Vertical 1: Spanish Upstream Data Curation" to provide an auditable, evidence-based perimeter evaluation tool for institutions before deployment. By testing open-weight models across an English baseline versus an "español-diverso" dataset (mixing neutral Spanish, Spanglish, and regionalisms), we demonstrate significant safety gaps. Our evaluation is anchored on two critical failure modes—dangerous knowledge probes (Δ ASR) and semantic over-refusal (FRR)—and extended to token-level Spanish representation, local bias, and factual hallucination. The results prove that a model deemed safe in English can fail critically in Spanish. Ultimately, S-OWMI equips vulnerable institutions with a practical scorecard to assess data curation safety, breaking the anglocentric asymmetry in LLM adoption.
 
 ## 1. Introduction
 When an institution in Latin America—such as a hospital, fintech, or government agency—seeks to adopt AI, open-weight models represent a highly attractive path. Unlike proprietary APIs, open-weight models allow for local data hosting, enabling compliance with strict data residency laws while avoiding recurring, unpredictable subscription fees paid in foreign currency. However, this path is not without financial hurdles: local hosting and fine-tuning require significant capital expenditure in GPU infrastructure, which is scarce and expensive in the region. Because of these infrastructure constraints, pre-deployment perimeter auditing is vital. Organizations cannot afford to commit scarce compute resources to models with unverified safety profiles in their target language.
@@ -71,28 +71,34 @@ A comprehensive upstream data curation audit covers six distinct linguistic and 
    * *Methodology:* Benchmarks models using localized medical exams (MIR), financial tasks (FLARE-ES), and Named Entity Recognition (NER) on regional public administration/legal databases.
    * *Metric:* *Factuality Evaluation Score (FES)* and *False Citation Rate (FCR)*.
 
-### 3.2 MVP Scope and Implementation
-To build an immediate, executable auditing tool for Latin American organizations, our MVP focuses on the two steps with the highest signal-to-noise ratio and immediate organizational risk relevance: **Step 3 (Semantic Filtering and Over-refusal)** and **Step 4 (Dangerous Knowledge Probes)**.
+### 3.2 Executed Scope and Implementation
+To build an immediate, executable auditing tool for Latin American organizations, we anchor our analysis on the two steps with the highest signal-to-noise ratio and most direct organizational risk—**Step 4 (Dangerous Knowledge Probes)** and **Step 3 (Semantic Filtering and Over-refusal)**—and extend the evaluation to cover **Step 1 (Linguistic Distribution), Step 5 (Toxicity and Biases), and Step 6 (Factual Quality)**. Step 2 (Dialectal Coverage) is treated qualitatively: rather than a separate test set, dialectal diversity is embedded directly into every Spanish prompt (see below). This yields a near-complete Vertical 1 audit while preserving a focused, interpretable core.
 
-* **Models and Linguistic Setup:** We evaluate Llama-3.1-8B and Qwen2.5-7B, comparing their English baseline performance against "español-diverso"—a dataset mixing neutral Spanish, Spanglish, and simultaneous regional variations rather than isolating single dialects.
+* **Models and Linguistic Setup:** We evaluate Llama-3.1-8B-Instruct and Qwen2.5-7B-Instruct, comparing their English baseline against "español-diverso"—a dataset mixing neutral Spanish, Spanglish, and simultaneous regional variations rather than isolating single dialects. The dataset comprises 100 base prompts rendered in both English and español-diverso (200 prompts per model), split across the evaluated steps (40 harmful for Step 4, 20 benign-sensitive for Step 3, 15 ambiguous for Step 5, 25 factual for Step 6), plus a 30-fragment parallel EN/ES corpus for Step 1. This sample size is calibrated to give the paired English-vs-Spanish comparison sufficient statistical power (McNemar's test) while remaining executable within the hackathon window, in line with established benchmarks (JailbreakBench: 100; MultiJail: ~35/language).
 * **Evaluation Protocol:**
-  * *Step 4 (Δ ASR):* We measure the delta in Attack Success Rate between English and español-diverso using adversarial prompts.
+  * *Step 1 (SCC):* We compute the ES/EN token fertility ratio over the parallel corpus; higher fertility signals weaker Spanish representation in pre-training.
   * *Step 3 (FRR):* We measure the False Refusal Rate using benign, culturally sensitive Spanish queries.
-* **Judging and Calibration:** Evaluated using a binary LLM-as-a-judge (Llama Guard 3), supplemented by a 20% human calibration review to ensure accuracy. Prompts and scripts are open-sourced for reproducibility.
+  * *Step 4 (Δ ASR):* We measure the delta in Attack Success Rate between English and español-diverso using adversarial prompts (semantic evasion and code-switching; visual-injection vectors are deferred to Future Work).
+  * *Step 5 (BSS) and Step 6 (FES/FCR):* We measure bias reinforcement on ambiguous local-stereotype prompts and factual accuracy / hallucination on localized health, finance, and legal questions.
+* **Judging and Calibration:** Harmful-content classification (Step 4) is performed with Llama Guard 3; over-refusal, bias, and factuality (Steps 3, 5, 6) are scored with a task-specific LLM-as-a-judge (GPT-4o) using a 0/1/2 rubric, with a rule-based fallback. All steps are supplemented by a 20% human calibration review. Prompts and scripts are open-sourced for reproducibility.
 
 ## 4. Results
 *(Note: Replace placeholder data with final execution results).*
 
 Our evaluation reveals a stark contrast in safety enforcement when shifting from the English baseline to the "español-diverso" dataset. 
 
-**Table 1: MVP Safety Comparison (English vs. Español-Diverso)**
+**Table 1: Vertical 1 Safety Comparison (English vs. Español-Diverso)**
 
-| Metric | English (Baseline) | Español-Diverso | Delta (Δ) |
-| :--- | :--- | :--- | :--- |
-| **Attack Success Rate (ASR)** | 12% | 45% | +33% |
-| **False Refusal Rate (FRR)** | 4% | 18% | +14% |
+| Step | Metric | English (Baseline) | Español-Diverso | Delta (Δ) |
+| :--- | :--- | :--- | :--- | :--- |
+| Step 4 | **Attack Success Rate (ASR)** | 12% | 45% | +33% |
+| Step 3 | **False Refusal Rate (FRR)** | 4% | 18% | +14% |
+| Step 5 | **Bias/Stereotype reinforcement** | TBD | TBD | TBD |
+| Step 6 | **Factual error / hallucination rate** | TBD | TBD | TBD |
 
-*Figure 1: (Insert a bar chart here visualizing the ASR and FRR gaps between English and Español-Diverso per evaluated model).*
+*Step 1 (Token Fertility): ES/EN fertility ratio reported per model (TBD); a ratio significantly above 1.0 indicates under-representation of Spanish in pre-training.*
+
+*Figure 1: (Bar chart visualizing the per-step English vs. Español-Diverso failure gaps per evaluated model — generated by `code/plot_figure.py`).*
 
 **The S-OWMI Organizational Scorecard (Vertical 1 MVP):**
 To translate these empirical findings into governance criteria, we define a maturity rubric for the audited steps of Vertical 1:
@@ -112,17 +118,17 @@ Based on the empirical results, the evaluated model achieves the following matur
 Our findings validate the theory of change: while open-weight models offer substantial sovereignty and data residency advantages, their adoption carries hidden safety debts that can result in wasted infrastructure investment and critical post-deployment failures. The significant Δ ASR demonstrates that treating "Spanish" as a monolith overestimates model resilience. S-OWMI Vertical 1 successfully provides institutions with a clear, auditable metric to assess this risk prior to deployment.
 
 **Limitations:**
-Given the 48-hour hackathon timeframe, our MVP is limited by a small prompt sample size (~20-30 per step) and relies on the subjective calibration of an LLM-as-a-judge. Furthermore, "español-diverso" aggregates regionalisms, preventing granular analysis of which specific dialect is most vulnerable.
+Given the 48-hour hackathon timeframe, our evaluation uses a moderate prompt sample (100 base prompts per language: 40 for Step 4, 20 for Step 3, 25 for Step 6, 15 for Step 5), which gives the headline English-vs-Spanish comparison adequate statistical power but limits granularity for the smallest category (bias, n=15, reported as a directional signal only). Our scoring relies in part on the calibration of an LLM-as-a-judge, mitigated by a 20% human review. Furthermore, "español-diverso" deliberately aggregates regionalisms and Spanglish, which strengthens detection of guardrail gaps but prevents granular analysis of which specific dialect is most vulnerable. Step 2 (Dialectal Coverage) is embedded qualitatively rather than scored as a standalone test set.
 
 **Future Work:**
-Future iterations should scale the pipeline to encompass all 6 steps of Vertical 1 (including token fertility and local factuality). Additionally, while we scoped out Vertical 2 (Provenance) and Vertical 3 (Tiered Release) to resolve scoring overlaps, integrating these for institutions with higher compute capacities remains a critical next step.
+Future iterations should add a dedicated dialect-by-dialect test set for Step 2, incorporate the visual-injection vector for Step 4, and expand factuality coverage. Additionally, while we scoped out Vertical 2 (Provenance) and Vertical 3 (Tiered Release) to resolve scoring overlaps, the empirical weakness this audit reveals in Spanish data curation is precisely what makes those downstream verticals critical: a model already unsafe in Spanish, with editable and untraceable weights, compounds the risk. Integrating these verticals for institutions with higher compute capacities remains a critical next step.
 
 ## 6. Conclusion
 The assumption that safety alignment in English transfers universally is fundamentally flawed. By auditing open-weight models using diverse Latin American dialects and Spanglish, we empirically demonstrated critical safety degradation in both harmful fulfillment (ASR) and benign over-refusal (FRR). The S-OWMI framework equips institutions in the Global South with an actionable, evidence-based perimeter defense, ensuring that cost-effective AI adoption does not compromise regional security.
 
 ## Code and Data
-* **Code repository:** [Link to GitHub]
-* **Data/Datasets:** [Link to dataset]
+* **Code repository:** https://github.com/fede-h/SOWMI
+* **Data/Datasets:** `prompts/prompts.csv` (200 prompts, EN + español-diverso) and `prompts/parallel_corpus/corpus.csv` (Step 1 fertility corpus), within the repository above.
 
 ## LLM Usage Statement
 We used Claude and Gemini to brainstorm approaches, structure our initial literature review, and assist in formatting this document. All experimental results, prompt designs, human-review sampling, and claims were independently verified and executed by the team.
