@@ -1,5 +1,45 @@
 # Contexto del proyecto — Resumen para el equipo
 
+## Actualización — Sábado 20 de junio de 2026, 14:05
+
+### Corrección sobre el entregable
+
+Al principio asumimos que solo había que entregar un PDF. **No es así.** El hackathon pide dos cosas:
+
+1. **Un proyecto funcional** — una herramienta, evaluación, análisis de política o contribución de investigación. → Nuestra evaluación de modelos + el dataset de prompts en español ES esto.
+2. **Un research report en PDF** — armado con el template oficial.
+
+**Lo que se juzga es el report.** Textual del template: *"Your project will be judged on the quality of this written report."*
+
+Datos clave del template:
+- **Largo recomendado: ~4 páginas** (sin contar referencias ni apéndice). Distribución sugerida: Introducción + Related Work 1p, Methods + Results 2.5p, Discussion 0.5p.
+- Estructura fija: Abstract (150–250 palabras) → Introduction (con lista de contribuciones) → Related Work → Methods → Results (con al menos 1 figura) → Discussion + Limitations + Future Work → Conclusion → Code & Data → References → **Appendix (acá van los prompts y resultados extendidos)** → LLM Usage Statement.
+- **Implicancia importante:** los 6 pasos completos de Vertical 1 no entran enteros en 4 páginas. El cuerpo resume; los prompts, métricas detalladas y resultados extendidos van al Appendix.
+
+### Cómo se juzga (rubric oficial — ver "Apart Sprint Evaluation Rubric.txt")
+
+Se puntúa en 3 dimensiones independientes, de 1 a 5:
+1. **Impact Potential & Innovation** — ¿importaría para AI safety si funciona? ¿es genuinamente nuevo o replica algo reciente? (para 4–5 exige novedad real, no replicación)
+2. **Execution Quality** — metodología sólida, resultados interpretables, validación convincente, limitaciones reconocidas.
+3. **Presentation & Clarity** — claro, bien estructurado, sin verborragia.
+
+Reglas que nos afectan directo: **"quality over quantity"** (4 páginas enfocadas > 10 ruidosas); *experimentos dispersos que no cierran restan en Execution*; *verborragia que tapa lo importante resta en Presentation*. Nivel 3 = trabajo sólido de fin de semana; Nivel 5 = top 5–10%.
+
+### Mapeo del esqueleto de entregable (Vertical 1) a las dimensiones experimentales
+
+Nuestro documento conjunto *"Vertical 1 — Data curation in spanish"* es el esqueleto del entregable. Sus 6 pasos se mapean así a las dimensiones de prueba y métricas:
+
+| Paso de Vertical 1 | Métrica | Dimensión experimental |
+|---|---|---|
+| Paso 1 — Fertilidad de tokens (cobertura de corpus) | SCC | Representación del español en pretraining |
+| Paso 2 — Cobertura y puntos ciegos dialectales | RCS | Variantes regionales (rioplatense, etc.) |
+| Paso 3 — Filtrado semántico / sobre-bloqueo | SFV, FRR | Over-refusal |
+| Paso 4 — Probe de conocimiento peligroso | Δ ASR | Jailbreak + code-switching |
+| Paso 5 — Toxicidad, sesgos y estereotipos locales | BSS | Toxicidad / sesgo |
+| Paso 6 — Calidad factual y alucinación | FES, FCR | Alucinación + calibración |
+
+---
+
 ## Qué estamos haciendo y por qué
 
 ### El problema central

@@ -1,6 +1,6 @@
 # Literatura relacionada — qué agregar al paper y por qué
 
-Este documento lista los trabajos existentes que deben citarse en el paper del equipo (Spanish Safety Maturity Framework) y en el paper personal de investigación. Para cada uno se explica qué aportan y exactamente qué frase/sección justifican.
+Este documento lista los trabajos existentes que deben citarse en el paper del equipo (Spanish Safety Maturity Framework). Para cada uno se explica qué aportan y exactamente qué frase/sección justifican.
 
 ---
 
@@ -15,7 +15,7 @@ Este documento lista los trabajos existentes que deben citarse en el paper del e
 **Dónde va en el paper:**
 - Introducción: como motivación del problema ("M-ALERT demostró X en Europa; nosotros extendemos esto a LATAM")
 - Background: como trabajo previo en evaluación multilingüe de seguridad
-- También en el paper personal de Nico, como evidencia de que el gap de traducción/perfiles existe comportamentalmente
+- Discussion: como evidencia de que el gap de traducción/perfiles existe a nivel de comportamiento
 
 ---
 
@@ -32,8 +32,8 @@ Este documento lista los trabajos existentes que deben citarse en el paper del e
 - No conecta con gobernanza de open-weight models
 
 **Dónde va en el paper:**
-- Background del paper del equipo: mención directa + tabla comparativa con nuestra contribución
-- Paper personal de Nico: citarlo como "benchmark más cercano" y articular las diferencias como brecha que justifica la investigación
+- Background: mención directa + tabla comparativa con nuestra contribución
+- Methods: citarlo como "benchmark más cercano" del que adaptamos la estructura (niveles L0–L3, evaluación directa/indirecta, over-sensitivity), articulando las diferencias como la brecha que justifica nuestro protocolo
 
 ---
 
@@ -46,8 +46,8 @@ Este documento lista los trabajos existentes que deben citarse en el paper del e
 **Qué dice exactamente para nosotros:** Los modelos tienen un "español por defecto" que favorece la variante peninsular. Esto implica que testear solo en español neutro subestima los gaps de seguridad en variantes LATAM.
 
 **Dónde va en el paper:**
-- Paper del equipo: mención en Background como justificación de incluir variantes dialectales en el protocolo de evaluación. No expandirse — solo citarlo.
-- Paper personal de Nico: citarlo como evidencia de que los perfiles lingüísticos varían por variante regional, lo que refuerza la Hipótesis B (perfiles distintos).
+- Background: mención como justificación de incluir variantes dialectales en el protocolo de evaluación. No expandirse — solo citarlo.
+- Discussion: como evidencia de que los perfiles lingüísticos varían por variante regional (refuerza la hipótesis de perfiles distintos).
 
 ---
 
@@ -58,7 +58,7 @@ Este documento lista los trabajos existentes que deben citarse en el paper del e
 **Por qué lo necesitamos:** Complementa a M-ALERT y LinguaSafe con evidencia de que los gaps de seguridad están correlacionados con la densidad de datos de entrenamiento en cada idioma. Refuerza el argumento de Vertical 1 (Data Curation) del framework.
 
 **Dónde va en el paper:**
-- Background del paper del equipo: para justificar Vertical 1 (curaduría de datos en español)
+- Background: para justificar Vertical 1 (curaduría de datos en español)
 - Una mención es suficiente. No expandirse.
 
 ---
@@ -70,16 +70,28 @@ Este documento lista los trabajos existentes que deben citarse en el paper del e
 **Por qué lo necesitamos:** Es el número más citado en la literatura sobre jailbreak multilingüe. Establece el baseline cuantitativo del problema. Nosotros aplicamos el mismo razonamiento al español LATAM específicamente.
 
 **Dónde va en el paper:**
-- Introducción y Background de ambos papers: es la cita de apertura que establece que el problema es real y medible.
+- Introducción y Background: es la cita de apertura que establece que el problema es real y medible.
+
+---
+
+## Fuentes nuevas (de las slides del equipo)
+
+- **Yong et al., 2024** — traducir un prompt dañino a un idioma de bajos recursos evadió la seguridad de GPT-4 ~79%. → Intro: la traducción sola alcanza para romper la seguridad.
+- **Yoo et al., ACL 2025** — el code-switching (mezclar dos idiomas) supera a cualquiera de los dos idiomas por separado (+46.7%). → Discussion: si fuera solo "calidad de traducción", mezclar no debería empeorarlo → argumento a favor de la hipótesis de perfiles.
+- **Shen et al.** — datos de idiomas de bajos recursos dan mejora mínima de alineación → cuello de botella en el pretraining, no en la alineación. → Justifica el peso alto de Vertical 1.
+- **Deng et al.** — RLHF baja el output dañino ~45% en idiomas ricos pero solo ~20% en pobres. → "Misma técnica, menos de la mitad del efecto."
 
 ---
 
 ## Resumen de uso por sección
 
-| Trabajo | Intro del paper equipo | Background equipo | Paper Nico |
+| Trabajo | Introducción | Background | Otras secciones |
 |---|---|---|---|
-| M-ALERT | ✅ Motivación central | ✅ Related work | ✅ Evidencia de gap |
-| LinguaSafe | — | ✅ Comparación directa | ✅ Diferenciación |
-| Spanish Is Not Just One | — | ✅ Justifica variantes | ✅ Evidencia Hipótesis B |
+| M-ALERT | ✅ Motivación central | ✅ Related work | Discussion (evidencia del gap) |
+| LinguaSafe | — | ✅ Comparación directa | Methods (estructura que adaptamos) |
+| Spanish Is Not Just One | — | ✅ Justifica variantes | Discussion (perfiles por variante) |
 | PolygloToxicityPrompts | — | ✅ Justifica Vertical 1 | — |
-| MultiJail / Marx & Dunaiski | ✅ Número clave | ✅ Related work | ✅ Baseline cuantitativo |
+| MultiJail / Marx & Dunaiski | ✅ Número clave | ✅ Related work | — |
+| Yong et al. 2024 | ✅ Apertura | — | — |
+| Yoo et al. 2025 | — | ✅ Code-switching | Discussion (hipótesis perfiles) |
+| Shen et al. / Deng et al. | — | ✅ Justifica Vertical 1 | Discussion |
