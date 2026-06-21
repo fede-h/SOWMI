@@ -12,3 +12,9 @@ env/
 
 # OS
 .DS_Store
+
+# LaTeX build
+.tooling/
+*.aux
+*.log
+*.out

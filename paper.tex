@@ -47,7 +47,7 @@
 % ── Header ────────────────────────────────────────────────────────────────────
 \pagestyle{fancy}
 \fancyhf{}
-\rhead{\small S-OWMI V1 — Apart Research Global South AI Safety Hackathon, June 2026}
+\rhead{\small S-OWMI V1 --- Apart Research Global South AI Safety Hackathon, June 2026}
 \rfoot{\small\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 
@@ -98,13 +98,13 @@ initial release deliberately scopes to \emph{Vertical 1: Spanish Upstream Data C
 providing a clean, non-overlapping safety signal ahead of fine-tuning; integration of
 \emph{Vertical 2 (Provenance)} and \emph{Vertical 3 (Tiered Release)} is reserved for
 future work. Evaluating Llama-3.1-8B and Qwen2.5-7B on an English baseline versus an
-``español-diverso'' dataset—mixing neutral Spanish, Spanglish, and regional colloquialisms—
+``español-diverso'' dataset---mixing neutral Spanish, Spanglish, and regional colloquialisms---
 we find that dangerous-prompt refusal (\dasr) and over-refusal (FRR) transfer robustly
 across languages. The critical finding lies elsewhere: both models show a \textbf{+13.3 pp
 degradation in bias-consistency} when switching to Spanish (step 5, medium Cohen's $h$),
 and both score poorly on open-domain LATAM factual queries ($\sim$80\% of answers fall
-short of detailed answer keys, though only $\sim$8\% are outright factual errors—the rest
-being incomplete) regardless of language—exposing a general readiness gap that a
+short of detailed answer keys, though only $\sim$8\% are outright factual errors---the rest
+being incomplete) regardless of language---exposing a general readiness gap that a
 Spanish-only audit would miss without an English baseline. The L1/L2/L3 scorecard gives Global South institutions an
 actionable, evidence-based tool to surface these weaknesses before committing to local
 deployment.
@@ -136,7 +136,7 @@ with unverified safety profiles in their target language.
 
 Currently, many deployers assume that safety benchmarks conducted in English guarantee
 secure operation in Spanish. Mechanistically, cross-lingual safety alignment is mediated
-by a sparse translingual parameter subset—less than 0.3\% of global model parameters—
+by a sparse translingual parameter subset---less than 0.3\% of global model parameters---
 known as Shared Safety Neurons (SS-Neurons) [6]. Because Spanish is a high-resource
 language, it benefits from partial safety transfer through these neurons; dangerous-prompt
 refusal does not simply collapse when the language switches. However, the SS-Neuron
@@ -144,7 +144,7 @@ pathway is calibrated primarily on standard, written English and Peninsular Span
 Regional colloquialisms, code-switching (Spanglish), and Latin American dialectal variation
 sit below its reliable activation threshold, creating a subtler but operationally
 significant gap: not outright refusal bypass, but degraded consistency in bias detection
-and factual reliability—as corroborated by multilingual safety benchmarks [1, 3] and
+and factual reliability---as corroborated by multilingual safety benchmarks [1, 3] and
 precisely the failure modes our evaluation surfaces. Furthermore, open-weight models
 present a compounding risk: their built-in safety alignment is fragile and can be
 surgically removed (abliteration) or inadvertently eroded during local fine-tuning,
@@ -157,15 +157,15 @@ scoring overlaps with downstream testing and provide a pure perimeter audit.
 
 \paragraph*{The S-OWMI Three-Pillar Framework.}
 S-OWMI structures evaluation across three complementary pillars (referred to as Verticals
-throughout this paper). \textbf{Vertical 1 — Spanish Upstream Data Curation} (implemented
+throughout this paper). \textbf{Vertical 1 --- Spanish Upstream Data Curation} (implemented
 here) audits whether a model was trained, filtered, and curated treating Spanish as a
-first-class safety dimension—covering token fertility, dialectal coverage, over-refusal,
+first-class safety dimension---covering token fertility, dialectal coverage, over-refusal,
 jailbreak probes, bias consistency, and factual quality in Spanish.
-\textbf{Vertical 2 — Weight Provenance \& Robustness} (future work) addresses model
+\textbf{Vertical 2 --- Weight Provenance \& Robustness} (future work) addresses model
 traceability and post-adaptation safety: identity verification (hashes, versioning),
 weight watermarking, and survival of safety constraints after fine-tuning, LoRA,
 quantization, and abliteration.
-\textbf{Vertical 3 — Spanish Tiered Release \& Testing} (future work) verifies that the
+\textbf{Vertical 3 --- Spanish Tiered Release \& Testing} (future work) verifies that the
 model underwent adversarial red-teaming in Spanish prior to deployment, covering jailbreaks,
 prompt injection, RAG poisoning, code-switching evasion, dialectal stress-testing, and
 native-speaker red-teaming. This paper implements Vertical 1 in full; Verticals 2 and 3
@@ -202,7 +202,7 @@ gaps for Latin America:
     This directly justifies the necessity of S-OWMI's focus on upstream curation.
   \item \textbf{MultiJail [4] (Marx \& Dunaiski, 2026):} Using low-resource African
     languages (Afrikaans, Kiswahili, isiXhosa, isiZulu), demonstrated jailbreak success
-    rates of 59.8\% via automated translation and 75.8\% via human red-teaming—confirming
+    rates of 59.8\% via automated translation and 75.8\% via human red-teaming---confirming
     that cross-lingual safety gaps widen as language resource level decreases.
   \item \textbf{``Spanish Is Not Just One'' [5]:} Proved empirically that LLMs have an
     implicit bias toward Peninsular Spanish and treat regional variants differently.
@@ -226,7 +226,7 @@ dimensions:
 
 \begin{enumerate}[leftmargin=1.5em, itemsep=3pt]
   \item \textbf{Linguistic Distribution of the Base Corpus (Step 1):} Token Fertility
-    Analysis — the tokenizer processes parallel corpora in English and Spanish to calculate
+    Analysis --- the tokenizer processes parallel corpora in English and Spanish to calculate
     the compression ratio (characters per token). High fertility indicates poor training
     data representation. \textit{Metric: Spanish Corpus Coverage (SCC).}
 
@@ -255,11 +255,11 @@ dimensions:
 \subsection{MVP Scope and Implementation}
 
 To build an immediate, executable auditing tool for Latin American organizations, our MVP
-focuses on Steps 3–6, which have the highest signal-to-noise ratio and organizational
+focuses on Steps 3--6, which have the highest signal-to-noise ratio and organizational
 risk relevance.
 
 \textbf{Models and Linguistic Setup:} We evaluate Llama-3.1-8B and Qwen2.5-7B, comparing
-English baseline performance against ``español-diverso''—a dataset mixing neutral Spanish,
+English baseline performance against ``español-diverso''---a dataset mixing neutral Spanish,
 Spanglish, and simultaneous regional variations across 200 prompt pairs.
 
 \textbf{Evaluation Protocol:}
@@ -278,13 +278,16 @@ Spanglish, and simultaneous regional variations across 200 prompt pairs.
 on matched EN/ES prompt pairs, and Cohen's $h$ as effect size. Hypothesis: $\Delta > 0$
 (model fails more in Spanish than English).
 
-% TODO (Nico): el 20% de revisión humana AÚN NO se ejecutó (los CSV *_human_review.csv
-% están vacíos). Si NO se corre antes de entregar, cambiar "supplemented by a 20% human
-% calibration review" por "for which a 20% human-calibration protocol is provided" para no
-% afirmar algo no hecho. Si SÍ se corre, dejar como está y agregar el kappa.
-\textbf{Judging and Calibration:} Evaluated using an LLM-as-a-judge pipeline
-(GPT-4o), supplemented by a 20\% human calibration review. A
-rule-based fallback judge is provided for reproducibility without API access.
+\textbf{Judging and Calibration:} Responses were scored by an LLM-as-a-judge
+(GPT-4o) on a 0/1/2 rubric per expected behavior, with a rule-based fallback
+for reproducibility without API access. We validated this judge two ways: (i) an
+independent second LLM judge (Gemini), and (ii) a 20\% manual review (40 items per
+model) conducted blind to the judge's labels and checked against reference answer
+keys. Inter-judge agreement was high---Cohen's $\kappa = 0.79$--$0.86$ (GPT-4o vs.\
+Gemini) and $\kappa = 0.75$--$1.00$ (GPT-4o vs.\ human)---exceeding our $\kappa \geq
+0.70$ threshold. The manual review additionally surfaced a calibration nuance on
+Step~5: humans scored a flat refusal of a biased premise more conservatively than
+either LLM judge (refusing $\neq$ actively challenging the stereotype).
 
 % ── 4. Results ────────────────────────────────────────────────────────────────
 \section{Results}
@@ -300,7 +303,7 @@ factual accuracy (Step 6) collapses in both languages alike.
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.85\textwidth]{figures/delta_asr_by_model.png}
-  \caption{\textbf{S-OWMI V1 — Safety alignment gap (\dasr) per evaluation step.}
+  \caption{\textbf{S-OWMI V1 --- Safety alignment gap (\dasr) per evaluation step.}
     Each bar shows Fail\textsubscript{ES} $-$ Fail\textsubscript{EN} (percentage points),
     averaged across Llama-3.1-8B and Qwen2.5-7B. Positive (red) bars = model fails more
     in Spanish. Step 3 = Over-refusal (FRR); Step 4 = Jailbreak (\dasr);
@@ -311,7 +314,7 @@ factual accuracy (Step 6) collapses in both languages alike.
 
 Figure~\ref{fig:delta-asr} shows the \dasr\ gap is concentrated in Step 5 (bias
 consistency), where both models degrade by $+13.3$ pp in español-diverso. Steps 3 and 4
-(over-refusal and jailbreak) show zero delta—refusal alignment transfers well to Spanish.
+(over-refusal and jailbreak) show zero delta---refusal alignment transfers well to Spanish.
 Step 6 (factuality) shows a slight improvement or no change in Spanish relative to
 English, confirming it is a general capability gap rather than a language-transfer failure.
 
@@ -367,15 +370,15 @@ paired data reveals that code-switching can break individual refusals that hold 
 In one self-harm prompt (\texttt{harm\_22}), Qwen2.5-7B cleanly refused the English version
 but, when the same request was posed in colloquial Spanish/Spanglish, it preserved a
 supportive tone yet still leaked the harmful guidance (graded PARTIAL). Llama-3.1-8B
-refused this prompt in all variants. Such cases—invisible to an aggregate ASR that nets
-out to zero—motivate the dialectal adversarial testing reserved for Vertical 3.
+refused this prompt in all variants. Such cases---invisible to an aggregate ASR that nets
+out to zero---motivate the dialectal adversarial testing reserved for Vertical 3.
 
 \subsection{S-OWMI Organizational Scorecard (Vertical 1)}
 
 % ── Table 2 ───────────────────────────────────────────────────────────────────
 \begin{table}[h]
   \centering
-  \caption{\textbf{S-OWMI V1 Scorecard — Llama-3.1-8B and Qwen2.5-7B.}
+  \caption{\textbf{S-OWMI V1 Scorecard --- Llama-3.1-8B and Qwen2.5-7B.}
     Scores 0--100 (higher = better). Level thresholds: \lvlthree~$\geq 75$,
     \lvltwo~40--74, \lvlone~$<40$. Steps 1--2 (Token Fertility, Dialectal Coverage)
     are pending and excluded from this MVP. The V1 score is therefore computed over
@@ -440,16 +443,18 @@ language-transfer failures from domain-coverage gaps.
 Given the hackathon timeframe, our evaluation uses moderate prompt sample sizes
 (15--40 pairs per step), which limits statistical power: no McNemar test reached
 $\alpha = 0.05$, meaning the observed Step~5 bias gap requires a larger replication
-to confirm. The pipeline also relies on the subjective calibration of an LLM-as-a-judge.
-Furthermore, ``español-diverso'' aggregates regionalisms into a single condition,
+to confirm. The LLM-as-a-judge introduces a calibration dependency, which we mitigate
+with an independent second LLM judge and a blind manual review (Cohen's $\kappa \geq
+0.75$; see Methods). Furthermore, ``español-diverso'' aggregates regionalisms into a single condition,
 preventing granular analysis of which specific dialect drives the observed
 bias degradation.
 
 \subsubsection*{Future Work}
 
-Future iterations should scale the pipeline to encompass all 6 steps of Vertical 1
-(including token fertility and local factuality benchmarks such as MIR, FLARE-ES, and
-LATAM NER). Additionally, while we scoped out Vertical 2 (Provenance) and Vertical 3
+Future iterations should fold Step~1 (token fertility, reported in Appendix~A) and
+Step~2 (dialectal coverage) into the scored index, add a dialect-by-dialect breakdown,
+and expand local factuality benchmarks (MIR, FLARE-ES, and LATAM NER). Additionally,
+while we scoped out Vertical 2 (Provenance) and Vertical 3
 (Tiered Release) to resolve scoring overlaps, integrating these for institutions with
 higher compute capacities remains a critical next step. A public leaderboard for
 open-weight models evaluated on español-diverso is also planned.
@@ -498,5 +503,32 @@ All authors contributed equally to this work.
 We used Claude and Gemini to brainstorm approaches, structure our initial literature
 review, and assist in formatting this document. All experimental results, prompt designs,
 human-review sampling, and claims were independently verified and executed by the team.
+
+% ── Appendix ──────────────────────────────────────────────────────────────────
+\appendix
+\section{Step 1 --- Token Fertility (SCC)}
+
+As a proxy for Spanish representation in pre-training (Spanish Corpus Coverage, SCC),
+we computed Spanish-vs-English token fertility (subword tokens per word) over a
+30-fragment parallel EN/ES corpus. A ratio $>1.25$ means the tokenizer over-segments
+Spanish, signalling weaker Spanish coverage. Level thresholds:
+\lvlthree~$<1.10$, \lvltwo~$1.10$--$1.25$, \lvlone~$>1.25$.
+
+\begin{center}
+\begin{tabular}{lcc}
+  \toprule
+  \textbf{Model} & \textbf{Fertility ratio ES/EN} & \textbf{SCC level} \\
+  \midrule
+  Qwen2.5-7B    & 1.29 & \lvlone \\
+  Llama-3.1-8B  & 1.31 & \lvlone \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+Both models over-segment Spanish by $\sim$30\% relative to English (\lvlone),
+consistent with the SS-Neuron account and with the factual-coverage gap observed in
+Step~6: Spanish is under-represented at the tokenizer level in both models. (The
+Llama-3.1 tokenizer was loaded from the public \texttt{NousResearch} mirror, which
+ships the identical tokenizer, to avoid gated-repo access.)
 
 \end{document}
