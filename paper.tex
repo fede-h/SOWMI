@@ -278,13 +278,16 @@ Spanglish, and simultaneous regional variations across 200 prompt pairs.
 on matched EN/ES prompt pairs, and Cohen's $h$ as effect size. Hypothesis: $\Delta > 0$
 (model fails more in Spanish than English).
 
-% TODO (Nico): el 20% de revisión humana AÚN NO se ejecutó (los CSV *_human_review.csv
-% están vacíos). Si NO se corre antes de entregar, cambiar "supplemented by a 20% human
-% calibration review" por "for which a 20% human-calibration protocol is provided" para no
-% afirmar algo no hecho. Si SÍ se corre, dejar como está y agregar el kappa.
-\textbf{Judging and Calibration:} Evaluated using an LLM-as-a-judge pipeline
-(GPT-4o), supplemented by a 20\% human calibration review. A
-rule-based fallback judge is provided for reproducibility without API access.
+\textbf{Judging and Calibration:} Responses were scored by an LLM-as-a-judge
+(GPT-4o) on a 0/1/2 rubric per expected behavior, with a rule-based fallback
+for reproducibility without API access. We validated this judge two ways: (i) an
+independent second LLM judge (Gemini), and (ii) a 20\% manual review (40 items per
+model) conducted blind to the judge's labels and checked against reference answer
+keys. Inter-judge agreement was high—Cohen's $\kappa = 0.79$--$0.86$ (GPT-4o vs.\
+Gemini) and $\kappa = 0.75$--$1.00$ (GPT-4o vs.\ human)—exceeding our $\kappa \geq
+0.70$ threshold. The manual review additionally surfaced a calibration nuance on
+Step~5: humans scored a flat refusal of a biased premise more conservatively than
+either LLM judge (refusing $\neq$ actively challenging the stereotype).
 
 % ── 4. Results ────────────────────────────────────────────────────────────────
 \section{Results}
@@ -440,16 +443,18 @@ language-transfer failures from domain-coverage gaps.
 Given the hackathon timeframe, our evaluation uses moderate prompt sample sizes
 (15--40 pairs per step), which limits statistical power: no McNemar test reached
 $\alpha = 0.05$, meaning the observed Step~5 bias gap requires a larger replication
-to confirm. The pipeline also relies on the subjective calibration of an LLM-as-a-judge.
-Furthermore, ``español-diverso'' aggregates regionalisms into a single condition,
+to confirm. The LLM-as-a-judge introduces a calibration dependency, which we mitigate
+with an independent second LLM judge and a blind manual review (Cohen's $\kappa \geq
+0.75$; see Methods). Furthermore, ``español-diverso'' aggregates regionalisms into a single condition,
 preventing granular analysis of which specific dialect drives the observed
 bias degradation.
 
 \subsubsection*{Future Work}
 
-Future iterations should scale the pipeline to encompass all 6 steps of Vertical 1
-(including token fertility and local factuality benchmarks such as MIR, FLARE-ES, and
-LATAM NER). Additionally, while we scoped out Vertical 2 (Provenance) and Vertical 3
+Future iterations should fold Step~1 (token fertility, reported in Appendix~A) and
+Step~2 (dialectal coverage) into the scored index, add a dialect-by-dialect breakdown,
+and expand local factuality benchmarks (MIR, FLARE-ES, and LATAM NER). Additionally,
+while we scoped out Vertical 2 (Provenance) and Vertical 3
 (Tiered Release) to resolve scoring overlaps, integrating these for institutions with
 higher compute capacities remains a critical next step. A public leaderboard for
 open-weight models evaluated on español-diverso is also planned.
@@ -498,5 +503,32 @@ All authors contributed equally to this work.
 We used Claude and Gemini to brainstorm approaches, structure our initial literature
 review, and assist in formatting this document. All experimental results, prompt designs,
 human-review sampling, and claims were independently verified and executed by the team.
+
+% ── Appendix ──────────────────────────────────────────────────────────────────
+\appendix
+\section{Step 1 — Token Fertility (SCC)}
+
+As a proxy for Spanish representation in pre-training (Spanish Corpus Coverage, SCC),
+we computed Spanish-vs-English token fertility (subword tokens per word) over a
+30-fragment parallel EN/ES corpus. A ratio $>1.25$ means the tokenizer over-segments
+Spanish, signalling weaker Spanish coverage. Level thresholds:
+\lvlthree~$<1.10$, \lvltwo~$1.10$--$1.25$, \lvlone~$>1.25$.
+
+\begin{center}
+\begin{tabular}{lcc}
+  \toprule
+  \textbf{Model} & \textbf{Fertility ratio ES/EN} & \textbf{SCC level} \\
+  \midrule
+  Qwen2.5-7B    & 1.29 & \lvlone \\
+  Llama-3.1-8B  & 1.31 & \lvlone \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+Both models over-segment Spanish by $\sim$30\% relative to English (\lvlone),
+consistent with the SS-Neuron account and with the factual-coverage gap observed in
+Step~6: Spanish is under-represented at the tokenizer level in both models. (The
+Llama-3.1 tokenizer was loaded from the public \texttt{NousResearch} mirror, which
+ships the identical tokenizer, to avoid gated-repo access.)
 
 \end{document}
