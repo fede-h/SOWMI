@@ -103,7 +103,7 @@ we find that dangerous-prompt refusal (\dasr) and over-refusal (FRR) transfer ro
 across languages. The critical finding lies elsewhere: both models show a \textbf{+13.3 pp
 degradation in bias-consistency} when switching to Spanish (step 5, medium Cohen's $h$),
 and both score poorly on open-domain LATAM factual queries ($\sim$80\% of answers fall
-short of detailed answer keys, though only $\sim$8\% are outright factual errors---the rest
+short of detailed answer keys, though only 7\% (7/100) are outright factual errors---the rest
 being incomplete) regardless of language---exposing a general readiness gap that a
 Spanish-only audit would miss without an English baseline. The L1/L2/L3 scorecard gives Global South institutions an
 actionable, evidence-based tool to surface these weaknesses before committing to local
@@ -244,8 +244,10 @@ dimensions:
     \textit{Metric: Attack Success Rate Delta (\dasr).}
 
   \item \textbf{Toxicity, Biases, and Local Stereotypes (Step 5):} Responses to
-    ambiguous prompts based on local idioms, measuring output token entropy via the
-    SESGO framework. \textit{Metric: Bias and Stereotype Score (BSS).}
+    ambiguous, locally-framed prompts are judged on whether they \emph{challenge}, stay
+    \emph{neutral} toward, or \emph{reinforce} a biased premise. \textit{Metric: Bias and
+    Stereotype Score (BSS) --- the fraction of responses that challenge rather than
+    reinforce the premise.}
 
   \item \textbf{Factual Quality and Local Hallucinations (Step 6):} Benchmarked using
     localized medical, financial, and legal tasks. \textit{Metric: Factuality Evaluation
@@ -267,13 +269,17 @@ Spanglish, and simultaneous regional variations across 200 prompt pairs.
 \textbf{Evaluation Protocol:}
 \begin{itemize}[leftmargin=1.5em, itemsep=2pt]
   \item \textit{Step 4 (\dasr):} Delta in Attack Success Rate between English and
-    español-diverso using adversarial prompts (REFUSE category).
+    español-diverso using adversarial prompts (REFUSE category). The MVP uses the
+    semantic-evasion and code-switching vectors; the visual-formatting vector from the
+    full protocol (\S3.1) is deferred to future work.
   \item \textit{Step 3 (FRR):} False Refusal Rate using benign, culturally sensitive
     Spanish queries (COMPLY category).
   \item \textit{Step 5 (BSS):} Bias and Stereotype Score using implicit-bias probes
     (NO\_BIAS category).
-  \item \textit{Step 6 (FES/FCR):} Factuality using LATAM-specific medical, financial,
+  \item \textit{Step 6 (FES):} Factuality using LATAM-specific medical, financial,
     and legal questions with answer keys (ANSWER / ANSWER\_PRECAUTIONARY categories).
+    The MVP reports the Factuality Evaluation Score (FES); the False Citation Rate (FCR)
+    is part of the full protocol and deferred to future work.
 \end{itemize}
 
 \textbf{Statistical Analysis:} For each step we compute McNemar's test (continuity-corrected)
@@ -363,8 +369,8 @@ with zero or near-zero deltas. Step 6 (factuality) scores poorly in both languag
 ($\sim$80--84\% of answers fail to fully match the answer key), indicating a LATAM
 domain-knowledge gap rather than a language-transfer failure. We note this figure is
 dominated by \emph{incomplete} answers (graded against detailed reference keys): only
-$\sim$8\% of responses are outright factually incorrect, while the majority are partially
-correct but omit required detail. No McNemar test reached $\alpha = 0.05$, consistent with
+7\% (7/100) of responses are outright factually incorrect (6 INCORRECT + 1 HALLUCINATED),
+while 76\% are partially correct but omit required detail and 17\% are fully correct. No McNemar test reached $\alpha = 0.05$, consistent with
 the moderate per-step sample sizes.
 
 \paragraph*{Qualitative observation.} While the aggregate jailbreak delta is zero, the
@@ -450,7 +456,7 @@ operationally significant weaknesses. First, bias consistency degrades by $+13.3
 dialectic Spanish (Step 5), consistently across both models and with medium effect size.
 Second, both models score poorly on LATAM factual queries (Step 6, $\sim$80--84\% of
 answers fall short of the reference keys) in both languages---though this is driven by
-incompleteness rather than falsehood ($\sim$8\% outright incorrect), it still exposes a
+incompleteness rather than falsehood (7\%, i.e.\ 7/100, outright incorrect), it still exposes a
 training-data coverage gap rather than a language-transfer failure. Crucially, S-OWMI's
 comparative baseline design makes this distinction visible:
 without the English anchor, practitioners would misattribute Step~6 failures as
@@ -459,14 +465,24 @@ language-transfer failures from domain-coverage gaps.
 
 \subsubsection*{Limitations}
 
-Given the hackathon timeframe, our evaluation uses moderate prompt sample sizes
-(15--40 pairs per step), which limits statistical power: no McNemar test reached
-$\alpha = 0.05$, meaning the observed Step~5 bias gap requires a larger replication
-to confirm. The LLM-as-a-judge introduces a calibration dependency, which we mitigate
-with an independent second LLM judge and a blind manual review (Cohen's $\kappa \geq
-0.75$; see Methods). Furthermore, ``español-diverso'' aggregates regionalisms into a single condition,
-preventing granular analysis of which specific dialect drives the observed
-bias degradation.
+\textbf{Statistical power is the central limitation.} Given the 48-hour sprint, our
+evaluation uses moderate per-step sample sizes (15--40 pairs), and \emph{no} McNemar
+test reached $\alpha = 0.05$. This bears most heavily on the headline Step~5 bias gap:
+at $N=15$, the $+13.3$~pp delta corresponds to only $\sim$2 discordant pairs per model,
+so even the apparent cross-model ``consistency'' ($+13.3$~pp in both) is partly an
+artifact of the coarse granularity ($N=15$ forces deltas to multiples of $6.7$~pp).
+We therefore report all per-step effects---and the bias gap in particular---as
+\emph{preliminary, directional} signals rather than confirmed findings. Confirming them
+would require a substantially larger paired sample (e.g.\ $\geq$50--100 pairs/step);
+under the hackathon's time and compute budget we deliberately prioritized a complete,
+reproducible, honestly-validated end-to-end pipeline over a larger $N$ that the timeframe
+did not allow. Generating that volume of additional adversarial and factual prompts (with
+verified answer keys) is the first item of future work, not a step we could complete in
+the sprint. Two further limitations: the LLM-as-a-judge introduces a calibration
+dependency, mitigated with an independent second LLM judge and a blind manual review
+(Cohen's $\kappa \geq 0.75$; agreement table in \texttt{results/judge\_agreement.csv});
+and ``español-diverso'' aggregates regionalisms into a single condition, preventing
+granular analysis of which specific dialect drives the bias degradation.
 
 \subsubsection*{Future Work}
 
@@ -496,8 +512,25 @@ about what models can and cannot do in the languages and domains that matter mos
 \section*{Code and Data}
 
 \begin{itemize}[leftmargin=1.5em, itemsep=2pt]
-  \item \textbf{Code repository:} \href{https://github.com/fede-h/SOWMI}{github.com/fede-h/SOWMI}
+  \item \textbf{Code:} \href{https://github.com/fede-h/SOWMI}{github.com/fede-h/SOWMI}
+    --- inference, judging, stats, scorecard, and inter-judge agreement scripts.
+  \item \textbf{Data:} the español-diverso prompt set, raw model responses, judge
+    scores, token-fertility outputs, and the human/second-judge review files are in the
+    repository (\texttt{prompts/}, \texttt{results/}). Raw \emph{harmful} prompts are
+    gated per the Ethics statement below; benign, bias, and factual prompts are open.
 \end{itemize}
+
+% ── Ethics and Dual-Use ───────────────────────────────────────────────────────
+\section*{Ethics and Dual-Use Statement}
+
+Our evaluation includes harmful, self-harm, and jailbreak prompts, used \emph{solely} to
+measure whether models refuse them; the work creates no novel harmful capability and
+reports no exploit. To limit misuse, the raw harmful prompt set is not distributed in the
+public repository and is available to vetted researchers on request; the benign, bias,
+and factual subsets are released openly. Self-harm items were used only to verify
+refusal-and-referral behavior, and outputs are described, never reproduced. The framework
+is defensive in intent: to help Global South institutions surface safety gaps \emph{before}
+deployment.
 
 % ── Author Contributions ──────────────────────────────────────────────────────
 \section*{Author Contributions}
