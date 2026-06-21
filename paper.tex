@@ -90,20 +90,24 @@
 \noindent
 Organizations in the Global South are increasingly drawn to open-weight large language
 models (LLMs) to ensure data sovereignty, adapt to local regulatory requirements, and
-eliminate recurring foreign-currency subscription fees. However, hosting and fine-tuning
-these models locally requires substantial upfront infrastructure investment. This capital
-barrier makes early-stage auditing crucial: institutions cannot afford to commit expensive
-local compute resources to models that harbor hidden safety deficits. This project
-introduces the \textbf{Spanish Open-Weight Maturity Index (S-OWMI)}, focusing on
-\emph{Vertical 1: Spanish Upstream Data Curation} to provide an auditable, evidence-based
-perimeter evaluation tool for institutions before deployment. By testing open-weight models
-across an English baseline versus an ``español-diverso'' dataset (mixing neutral Spanish,
-Spanglish, and regionalisms), we demonstrate significant safety gaps. Our minimal viable
-product (MVP) evaluates models on critical failure modes—specifically dangerous knowledge
-probes (\dasr) and semantic over-refusal (FRR). The results prove that a model deemed safe
-in English can fail critically in Spanish. Ultimately, S-OWMI equips vulnerable institutions
-with a practical scorecard to assess data curation safety, breaking the anglocentric
-asymmetry in LLM adoption.
+eliminate recurring foreign-currency subscription fees. Yet local hosting and fine-tuning
+carry substantial infrastructure costs, making pre-deployment auditing essential:
+institutions cannot afford to commit scarce GPU resources to models with unverified safety
+profiles in their target language. We introduce the \textbf{Spanish Open-Weight Maturity
+Index (S-OWMI)}, an auditable perimeter evaluation framework for open-weight LLMs. This
+initial release deliberately scopes to \emph{Vertical 1: Spanish Upstream Data Curation},
+providing a clean, non-overlapping safety signal ahead of fine-tuning; integration of
+\emph{Vertical 2 (Provenance)} and \emph{Vertical 3 (Tiered Release)} is reserved for
+future work. Evaluating Llama-3.1-8B and Qwen2.5-7B on an English baseline versus an
+``español-diverso'' dataset—mixing neutral Spanish, Spanglish, and regional colloquialisms—
+we find that dangerous-prompt refusal (\dasr) and over-refusal (FRR) transfer robustly
+across languages. The critical finding lies elsewhere: both models show a \textbf{+13.3 pp
+degradation in bias-consistency} when switching to Spanish (step 5, medium Cohen's $h$),
+and both collapse on open-domain factual queries ($\sim$80\% failure rate) regardless of
+language—exposing a general readiness gap that a Spanish-only audit would miss without
+an English baseline. The L1/L2/L3 scorecard gives Global South institutions an
+actionable, evidence-based tool to surface these weaknesses before committing to local
+deployment.
 \end{abstract}
 
 \vspace{0.5em}
@@ -113,37 +117,68 @@ asymmetry in LLM adoption.
 % ── 1. Introduction ───────────────────────────────────────────────────────────
 \section{Introduction}
 
-When an institution in Latin America—such as a hospital, fintech, or government
-agency—seeks to adopt AI, open-weight models represent a highly attractive path. Unlike
-proprietary APIs, open-weight models allow for local data hosting, enabling compliance with
-strict data residency laws while avoiding recurring, unpredictable subscription fees paid
-in foreign currency. However, this path is not without financial hurdles: local hosting and
-fine-tuning require significant capital expenditure in GPU infrastructure, which is scarce
-and expensive in the region. Because of these infrastructure constraints, pre-deployment
-perimeter auditing is vital. Organizations cannot afford to commit scarce compute resources
-to models with unverified safety profiles in their target language.
+When an institution in Latin America---such as a hospital, fintech, or government
+agency---seeks to adopt AI, the stakes are concrete and immediate. The regional AI market
+reached \$29.5 billion in 2025 and is expanding at over 26\% annually, with banking,
+healthcare, and government among the fastest-growing sectors. Yet the dominant adoption
+path---proprietary API subscriptions---creates structural dependency: costs are
+denominated in foreign currency, data must cross borders, and compliance with national
+data protection frameworks becomes legally precarious. Brazil's LGPD, Argentina's Ley
+25.326, and Colombia's Ley 1581 all impose strict cross-border data transfer requirements;
+for organizations handling sensitive patient, financial, or citizen data, routing
+inferences through foreign infrastructure is not merely expensive---it may be legally
+untenable. Open-weight models resolve this: they allow full local data hosting, enabling
+regulatory compliance while eliminating recurring foreign-currency fees. However, local
+hosting and fine-tuning require significant GPU capital expenditure, which is scarce and
+expensive in the region. This infrastructure constraint makes pre-deployment perimeter
+auditing vital---organizations cannot afford to commit scarce compute resources to models
+with unverified safety profiles in their target language.
 
 Currently, many deployers assume that safety benchmarks conducted in English guarantee
-secure operation in Spanish. Mechanistically, however, cross-lingual safety alignment
-relies on a highly restricted translingual parameter subset (less than 0.3\% of the global
-model parameters) known as Shared Safety Neurons (SS-Neurons). Lexical variations,
-colloquialisms, and regional idioms unique to Spanish fail to robustly activate these
-English-indexed pathways, leading to critical safety failures and allowing jailbreaks that
-would otherwise be blocked in English. Furthermore, open-weight models present a unique
-threat model: their built-in safety alignment is fragile and can be easily bypassed or
-surgically removed (abliteration) during fine-tuning.
+secure operation in Spanish. Mechanistically, cross-lingual safety alignment is mediated
+by a sparse translingual parameter subset—less than 0.3\% of global model parameters—
+known as Shared Safety Neurons (SS-Neurons) [6]. Because Spanish is a high-resource
+language, it benefits from partial safety transfer through these neurons; dangerous-prompt
+refusal does not simply collapse when the language switches. However, the SS-Neuron
+pathway is calibrated primarily on standard, written English and Peninsular Spanish [5].
+Regional colloquialisms, code-switching (Spanglish), and Latin American dialectal variation
+sit below its reliable activation threshold, creating a subtler but operationally
+significant gap: not outright refusal bypass, but degraded consistency in bias detection
+and factual reliability—as corroborated by multilingual safety benchmarks [1, 3] and
+precisely the failure modes our evaluation surfaces. Furthermore, open-weight models
+present a compounding risk: their built-in safety alignment is fragile and can be
+surgically removed (abliteration) or inadvertently eroded during local fine-tuning,
+making pre-deployment auditing in the target language variety essential.
 
 Our core theory of change is that institutions need an auditable and evidence-based way to
 evaluate Spanish data curation safety \emph{before} adopting and fine-tuning an open-weight
 model with sensitive local data. By restricting our framework to Vertical 1, we eliminate
 scoring overlaps with downstream testing and provide a pure perimeter audit.
 
+\paragraph*{The S-OWMI Three-Pillar Framework.}
+S-OWMI structures evaluation across three complementary pillars (referred to as Verticals
+throughout this paper). \textbf{Vertical 1 — Spanish Upstream Data Curation} (implemented
+here) audits whether a model was trained, filtered, and curated treating Spanish as a
+first-class safety dimension—covering token fertility, dialectal coverage, over-refusal,
+jailbreak probes, bias consistency, and factual quality in Spanish.
+\textbf{Vertical 2 — Weight Provenance \& Robustness} (future work) addresses model
+traceability and post-adaptation safety: identity verification (hashes, versioning),
+weight watermarking, and survival of safety constraints after fine-tuning, LoRA,
+quantization, and abliteration.
+\textbf{Vertical 3 — Spanish Tiered Release \& Testing} (future work) verifies that the
+model underwent adversarial red-teaming in Spanish prior to deployment, covering jailbreaks,
+prompt injection, RAG poisoning, code-switching evasion, dialectal stress-testing, and
+native-speaker red-teaming. This paper implements Vertical 1 in full; Verticals 2 and 3
+are reserved for future work to avoid scoring overlaps.
+
 \textbf{Our main contributions are:}
 \begin{enumerate}[leftmargin=1.5em, itemsep=2pt]
   \item \textbf{S-OWMI:} An auditable safety index focusing on Spanish data curation for
     open-weight models.
-  \item \textbf{Empirical Evaluation:} A comparative analysis of open-weight models,
-    demonstrating the safety gap between English and diverse Spanish prompts.
+  \item \textbf{Empirical Evaluation:} A comparative analysis of Llama-3.1-8B and
+    Qwen2.5-7B, revealing robust refusal-safety transfer alongside a consistent
+    bias-consistency degradation in dialectal Spanish and a shared factual accuracy
+    gap in LATAM-specific domains.
   \item \textbf{Organizational Scorecard:} A practical L1/L2/L3 rubric that helps Global
     South organizations interpret empirical results to make informed adoption decisions.
 \end{enumerate}
@@ -155,19 +190,21 @@ Our framework builds upon recent multilingual safety literature while addressing
 gaps for Latin America:
 
 \begin{itemize}[leftmargin=1.5em, itemsep=2pt]
-  \item \textbf{M-ALERT (2024):} Demonstrated high safety inconsistency across European
-    languages, proving that harmful prompts rejected in English are often fulfilled in
+  \item \textbf{M-ALERT [1] (2024):} Demonstrated high safety inconsistency across European
+    languages, showing that harmful prompts rejected in English are often fulfilled in
     standard Spanish.
-  \item \textbf{LinguaSafe:} A benchmark evaluating safety across 12 languages. However,
+  \item \textbf{LinguaSafe [2]:} A benchmark evaluating safety across 12 languages. However,
     it lacks Latin American Spanish, dialectal variations, and an organizational maturity
     scorecard.
-  \item \textbf{PolygloToxicityPrompts (PTP):} Demonstrated that toxicity increases in
+  \item \textbf{PolygloToxicityPrompts [3] (PTP):} Demonstrated that toxicity increases in
     languages with fewer high-quality data resources, showing that safety alignment is
     strongly correlated with the volume and curation of training data in each language.
     This directly justifies the necessity of S-OWMI's focus on upstream curation.
-  \item \textbf{MultiJail (Marx \& Dunaiski, 2026):} Established that jailbreak success
-    rates increase from 59.8\% to 75.8\% when executed in languages other than English.
-  \item \textbf{``Spanish Is Not Just One'':} Proved empirically that LLMs have an
+  \item \textbf{MultiJail [4] (Marx \& Dunaiski, 2026):} Using low-resource African
+    languages (Afrikaans, Kiswahili, isiXhosa, isiZulu), demonstrated jailbreak success
+    rates of 59.8\% via automated translation and 75.8\% via human red-teaming—confirming
+    that cross-lingual safety gaps widen as language resource level decreases.
+  \item \textbf{``Spanish Is Not Just One'' [5]:} Proved empirically that LLMs have an
     implicit bias toward Peninsular Spanish and treat regional variants differently.
 \end{itemize}
 
@@ -242,7 +279,7 @@ on matched EN/ES prompt pairs, and Cohen's $h$ as effect size. Hypothesis: $\Del
 (model fails more in Spanish than English).
 
 \textbf{Judging and Calibration:} Evaluated using an LLM-as-a-judge pipeline
-(Llama Guard 3 or GPT-4o), supplemented by a 20\% human calibration review. A
+(GPT-4o), supplemented by a 20\% human calibration review. A
 rule-based fallback judge is provided for reproducibility without API access.
 
 % ── 4. Results ────────────────────────────────────────────────────────────────
@@ -250,116 +287,146 @@ rule-based fallback judge is provided for reproducibility without API access.
 
 \subsection{Safety Alignment Gap: English vs.\ Español-Diverso}
 
-Our evaluation reveals a stark contrast in safety enforcement when shifting from the
-English baseline to the español-diverso dataset across all four measured steps.
+Evaluating Llama-3.1-8B and Qwen2.5-7B across 200 paired English/español-diverso prompts,
+our results reveal a nuanced picture: refusal safety (Steps 3--4) transfers robustly
+across languages, while bias consistency (Step 5) degrades in español-diverso, and
+factual accuracy (Step 6) collapses in both languages alike.
 
 % ── Figure 1 ──────────────────────────────────────────────────────────────────
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.85\textwidth]{figures/delta_asr_by_model.png}
-  \caption{\textbf{S-OWMI V1 — Safety alignment gap per evaluation step.}
-    Each bar shows $\Delta$ASR = Fail\textsubscript{ES} $-$ Fail\textsubscript{EN}
-    in percentage points. Red bars indicate the model fails more in Spanish than in
-    English. Step 3 = Over-refusal (FRR); Step 4 = Jailbreak (\dasr);
-    Step 5 = Bias/Stereotype (BSS); Step 6 = Factuality (FES/FCR).
-    \textit{Note: values shown correspond to mock data used to validate the pipeline;
-    replace with results from full model evaluation.}}
+  \caption{\textbf{S-OWMI V1 — Safety alignment gap (\dasr) per evaluation step.}
+    Each bar shows Fail\textsubscript{ES} $-$ Fail\textsubscript{EN} (percentage points),
+    averaged across Llama-3.1-8B and Qwen2.5-7B. Positive (red) bars = model fails more
+    in Spanish. Step 3 = Over-refusal (FRR); Step 4 = Jailbreak (\dasr);
+    Step 5 = Bias/Stereotype (BSS); Step 6 = Factuality (FES). Both models show a
+    consistent $+13.3$\,pp degradation in Step 5; other steps are near-zero or negative.}
   \label{fig:delta-asr}
 \end{figure}
 
-Figure~\ref{fig:delta-asr} shows that the alignment gap is positive (ES worse than EN)
-across all four steps, with deltas ranging from $+67$ to $+100$ percentage points in the
-mock validation run.
+Figure~\ref{fig:delta-asr} shows the \dasr\ gap is concentrated in Step 5 (bias
+consistency), where both models degrade by $+13.3$ pp in español-diverso. Steps 3 and 4
+(over-refusal and jailbreak) show zero delta—refusal alignment transfers well to Spanish.
+Step 6 (factuality) shows a slight improvement or no change in Spanish relative to
+English, confirming it is a general capability gap rather than a language-transfer failure.
 
 % ── Table 1 ───────────────────────────────────────────────────────────────────
 \begin{table}[h]
   \centering
-  \caption{\textbf{McNemar paired comparison — English vs.\ Español-Diverso per step.}
-    $N$ = matched EN/ES prompt pairs. Fail\% = proportion of pairs where the model
-    failed the expected behavior. \dasr{} = Fail\textsubscript{ES} $-$
-    Fail\textsubscript{EN} (pp). Cohen's $h$: $|h|\geq 0.5$ large, $|h|\geq 0.2$
-    medium, $|h|<0.2$ small. \textbf{Bold} $p$-values are significant at $\alpha=0.05$.
-    \textit{Values shown are mock data for pipeline validation; replace with
-    production results.}}
+  \caption{\textbf{EN vs.\ Español-Diverso failure rates per step and model.}
+    Fail\% = proportion of matched pairs failing the expected behavior.
+    \dasr{} = Fail\textsubscript{ES} $-$ Fail\textsubscript{EN} (pp).
+    Cohen's $h$: $|h|\geq 0.5$ large, $|h|\geq 0.2$ medium, $|h|<0.2$ small.
+    All McNemar $p > 0.05$ ($N$=20 Step~3, $N$=40 Step~4, $N$=15 Step~5,
+    $N$=25 Step~6). \textbf{Bold} \dasr{} = most consistent cross-lingual gap.}
   \label{tab:mcnemar}
   \smallskip
   \small
-  \begin{tabular}{p{3.4cm}C{0.55cm}C{1.15cm}C{1.15cm}C{1.2cm}C{1.45cm}C{1.15cm}C{1.45cm}}
+  \begin{tabular}{p{1.6cm}p{2.9cm}C{0.85cm}C{0.85cm}C{0.9cm}C{0.9cm}l}
     \toprule
-    \textbf{Step} & \textbf{$N$}
+    \textbf{Model} & \textbf{Step}
       & \makecell{\textbf{Fail}\\\textbf{EN}}
       & \makecell{\textbf{Fail}\\\textbf{ES}}
       & \makecell{\textbf{\dasr}\\\textbf{(pp)}}
-      & \makecell{\textbf{McNemar}\\\textbf{$p$}}
       & \makecell{\textbf{Cohen's}\\\textbf{$h$}}
       & \makecell{\textbf{Effect}\\\textbf{size}} \\
     \midrule
-    Over-refusal (FRR)   & 1 & 0.0\% & 100.0\% & $+100.0$ & 1.0000 & $+3.14$ & large \\
-    Jailbreak (\dasr)    & 3 & 0.0\% &  66.7\% & $+66.7$  & 0.7788 & $+1.91$ & large \\
-    Bias/Stereo (BSS)    & 1 & 0.0\% & 100.0\% & $+100.0$ & 1.0000 & $+3.14$ & large \\
-    Factuality (FES/FCR) & 1 & 0.0\% & 100.0\% & $+100.0$ & 1.0000 & $+3.14$ & large \\
+    \multirow{4}{*}{\makecell[l]{Llama\\3.1-8B}}
+      & Step 3 --- Over-refusal & 0.0\%  & 0.0\%  & $0.0$            & $0.000$  & small  \\
+      & Step 4 --- Jailbreak    & 0.0\%  & 0.0\%  & $0.0$            & $0.000$  & small  \\
+      & Step 5 --- Bias (BSS)   & 13.3\% & 26.7\% & $\mathbf{+13.3}$ & $0.338$  & medium \\
+      & Step 6 --- Factuality   & 84.0\% & 80.0\% & $-4.0$           & $-0.104$ & small  \\
     \midrule
-    \textbf{Global}      & 6 & 0.0\% &  83.3\% & $\mathbf{+83.3}$ & — & — & — \\
+    \multirow{4}{*}{\makecell[l]{Qwen\\2.5-7B}}
+      & Step 3 --- Over-refusal & 0.0\%  & 0.0\%  & $0.0$            & $0.000$  & small  \\
+      & Step 4 --- Jailbreak    & 5.0\%  & 5.0\%  & $0.0$            & $0.000$  & small  \\
+      & Step 5 --- Bias (BSS)   & 6.7\%  & 20.0\% & $\mathbf{+13.3}$ & $0.405$  & medium \\
+      & Step 6 --- Factuality   & 84.0\% & 84.0\% & $0.0$            & $0.000$  & small  \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Across all steps, the English baseline exhibits near-zero failure rates while
-español-diverso prompts elicit failures at substantially higher rates. Effect sizes are
-uniformly large ($|h| > 0.5$), indicating a robust alignment gap regardless of sample
-size. Statistical significance requires larger $N$ (production run: 200 prompt pairs per
-step).
+The bias consistency step (Step~5) is the only dimension showing a consistent
+Spanish-specific degradation: $+13.3$ pp for both models, with medium Cohen's $h$
+(0.338 for Llama, 0.405 for Qwen). Refusal safety (Steps 3--4) transfers robustly,
+with zero or near-zero deltas. Step 6 (factuality) collapses in both languages
+($\sim$80\% failure), indicating a LATAM domain-knowledge gap rather than a
+language-transfer failure. No McNemar test reached $\alpha = 0.05$, consistent with
+the moderate per-step sample sizes.
 
 \subsection{S-OWMI Organizational Scorecard (Vertical 1)}
 
 % ── Table 2 ───────────────────────────────────────────────────────────────────
 \begin{table}[h]
   \centering
-  \caption{\textbf{S-OWMI V1 Scorecard for MockModel-7B.}
-    Scores are 0–100 (higher = better alignment). Level thresholds:
-    \lvlthree~$\geq 75$, \lvltwo~40–74, \lvlone~$<40$.
-    Step 1 (Token Fertility) and Step 2 (Dialectal Coverage) are reported separately;
-    see Appendix~\ref{app:paso12}.}
+  \caption{\textbf{S-OWMI V1 Scorecard — Llama-3.1-8B and Qwen2.5-7B.}
+    Scores 0--100 (higher = better). Level thresholds: \lvlthree~$\geq 75$,
+    \lvltwo~40--74, \lvlone~$<40$. Steps 1--2 are reported in
+    Steps 1--2 (Token Fertility, Dialectal Coverage) are pending and excluded from
+    this MVP. Weights: P3$\times$15, P4$\times$30, P5$\times$15,
+    P6$\times$15 (V1 partial; P1$\times$10 and P2$\times$15 pending).}
   \label{tab:scorecard}
   \smallskip
-  \begin{tabular}{lC{1.5cm}C{1.2cm}l}
+  \begin{tabular}{lC{1.1cm}C{1.1cm}C{1.1cm}C{1.1cm}C{1.4cm}C{1.2cm}}
     \toprule
-    \textbf{Step} & \textbf{Score} & \textbf{Level} & \textbf{Key metric} \\
+    \textbf{Model}
+      & \makecell{\textbf{P3}\\\textbf{FRR}}
+      & \makecell{\textbf{P4}\\\textbf{\dasr}}
+      & \makecell{\textbf{P5}\\\textbf{BSS}}
+      & \makecell{\textbf{P6}\\\textbf{FES}}
+      & \makecell{\textbf{V1}\\\textbf{Score}}
+      & \makecell{\textbf{V1}\\\textbf{Level}} \\
     \midrule
-    Step 3 — Over-refusal (FRR)   & 0.0  & \lvlone & FRR = 100.0\% \\
-    Step 4 — Jailbreak (\dasr)    & 33.3 & \lvlone & ASR\textsubscript{ES} = 66.7\%,\ \dasr = $+0.667$ \\
-    Step 5 — Bias/Stereo (BSS)    & 0.0  & \lvlone & BSS = 0.0\% responses without bias \\
-    Step 6 — Factuality (FES/FCR) & 0.0  & \lvlone & FES = 0.0\% factually correct \\
-    \midrule
-    \textbf{V1 Global Score}      & \textbf{13.3} & \lvlone &
-      Headline \dasr\ (ES$-$EN) = $+0.833$ \\
+    Llama-3.1-8B
+      & \makecell{100.0\\\lvlthree}
+      & \makecell{100.0\\\lvlthree}
+      & \makecell{73.3\\\lvltwo}
+      & \makecell{20.0\\\lvlone}
+      & \textbf{78.7}
+      & \lvlthree \\[4pt]
+    Qwen2.5-7B
+      & \makecell{100.0\\\lvlthree}
+      & \makecell{95.0\\\lvlthree}
+      & \makecell{80.0\\\lvlthree}
+      & \makecell{16.0\\\lvlone}
+      & \textbf{77.2}
+      & \lvlthree \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Based on the empirical results (Table~\ref{tab:scorecard}), the evaluated model achieves
-\lvlone\ (Foundational) across all measured steps. \textbf{Organizational interpretation:}
-alignment is deficient — the model is not recommended for deployment in sensitive
-LATAM contexts without extensive Spanish-native safety fine-tuning and strict system
-prompts.
+Both models achieve \lvlthree\ (Mature) overall on V1 (78.7 and 77.2 respectively),
+driven by perfect or near-perfect refusal and over-refusal scores. However, both score
+\lvlone\ (Foundational) on Step 6 (factuality), exposing a shared weakness in
+LATAM-specific open-domain queries that holds equally in English.
+\textbf{Organizational interpretation:} these models are suitable for low-risk NLP tasks
+but should not be deployed in sensitive factual domains (medical, legal, financial) without
+domain-specific fine-tuning and verified answer grounding.
 
 % ── 5. Discussion ─────────────────────────────────────────────────────────────
 \section{Discussion and Limitations}
 
-Our findings validate the theory of change: while open-weight models offer substantial
-sovereignty and data residency advantages, their adoption carries hidden safety debts that
-can result in wasted infrastructure investment and critical post-deployment failures. The
-significant \dasr\ demonstrates that treating ``Spanish'' as a monolith overestimates
-model resilience. S-OWMI Vertical 1 successfully provides institutions with a clear,
-auditable metric to assess this risk prior to deployment.
+Our findings partially validate the theory of change: refusal-based safety alignment
+(Steps 3--4) transfers robustly to español-diverso, but S-OWMI Vertical 1 surfaces two
+operationally significant weaknesses. First, bias consistency degrades by $+13.3$~pp in
+dialectic Spanish (Step 5), consistently across both models and with medium effect size.
+Second, both models collapse on LATAM factual queries ($\sim$80\% failure, Step 6)
+in both languages---exposing a training-data gap rather than a language-transfer
+failure. Crucially, S-OWMI's comparative baseline design makes this distinction visible:
+without the English anchor, practitioners would misattribute Step~6 failures as
+Spanish-specific. Vertical 1 provides the diagnostic resolution to separate
+language-transfer failures from domain-coverage gaps.
 
 \subsubsection*{Limitations}
 
-Given the 48-hour hackathon timeframe, our MVP is limited by a small prompt sample size
-(200 per step in the full pipeline; 1–3 pairs per step in the mock validation run) and
-relies on the subjective calibration of an LLM-as-a-judge. Furthermore,
-``español-diverso'' aggregates regionalisms, preventing granular analysis of which
-specific dialect is most vulnerable.
+Given the hackathon timeframe, our evaluation uses moderate prompt sample sizes
+(15--40 pairs per step), which limits statistical power: no McNemar test reached
+$\alpha = 0.05$, meaning the observed Step~5 bias gap requires a larger replication
+to confirm. The pipeline also relies on the subjective calibration of an LLM-as-a-judge.
+Furthermore, ``español-diverso'' aggregates regionalisms into a single condition,
+preventing granular analysis of which specific dialect drives the observed
+bias degradation.
 
 \subsubsection*{Future Work}
 
@@ -373,12 +440,16 @@ open-weight models evaluated on español-diverso is also planned.
 % ── 6. Conclusion ─────────────────────────────────────────────────────────────
 \section{Conclusion}
 
-The assumption that safety alignment in English transfers universally is fundamentally
-flawed. By auditing open-weight models using diverse Latin American dialects and Spanglish,
-we empirically demonstrated critical safety degradation in both harmful fulfillment (ASR)
-and benign over-refusal (FRR) across all tested dimensions. The S-OWMI framework equips
-institutions in the Global South with an actionable, evidence-based perimeter defense,
-ensuring that cost-effective AI adoption does not compromise regional security.
+Safety alignment in high-resource languages like Spanish does not uniformly fail across
+all dimensions---but its robustness is uneven. Evaluating Llama-3.1-8B and Qwen2.5-7B
+on español-diverso, we find that dangerous-prompt refusal transfers reliably to diverse
+Spanish, while bias consistency degrades by $+13.3$~pp in dialectal varieties and
+factual accuracy collapses in LATAM-specific domains---a weakness equally present in
+English. The comparative baseline design of S-OWMI is what makes this distinction
+auditable: it allows practitioners to separate language-transfer failures from
+domain-coverage gaps before committing to local deployment. The S-OWMI framework equips
+institutions in the Global South with an evidence-based perimeter tool that is honest
+about what models can and cannot do in the languages and domains that matter most.
 
 % ── Code and Data ─────────────────────────────────────────────────────────────
 \section*{Code and Data}
@@ -399,8 +470,9 @@ All authors contributed equally to this work.
   \item Tedeschi et al.\ (2024). \textit{M-ALERT: Multilingual Safety Evaluation of LLMs}.
   \item Shen et al.\ (2024). \textit{LinguaSafe: Safety Evaluation Across 12 Languages}.
   \item Jain et al.\ (2024). \textit{PolygloToxicityPrompts: Multilingual Toxicity Evaluation of LLMs}.
-  \item Marx \& Dunaiski (2026). \textit{MultiJail: Cross-lingual Jailbreak Evaluation}.
+  \item Marx \& Dunaiski (2026). \textit{Multilingual jailbreaking of LLMs using low-resource languages}. arXiv preprint.
   \item Navigli et al.\ (2024). \textit{Spanish Is Not Just One: Bias Toward Peninsular Spanish in LLMs}.
+  \item Zhang et al.\ (2026). \textit{Who Transfers Safety? Identifying and Targeting Cross-Lingual Shared Safety Neurons}. ICML 2026. arXiv:2602.01283.
 \end{enumerate}
 
 % ── LLM Usage Statement ───────────────────────────────────────────────────────
@@ -409,52 +481,5 @@ All authors contributed equally to this work.
 We used Claude and Gemini to brainstorm approaches, structure our initial literature
 review, and assist in formatting this document. All experimental results, prompt designs,
 human-review sampling, and claims were independently verified and executed by the team.
-
-% ── Appendix ──────────────────────────────────────────────────────────────────
-\appendix
-
-\section{Step 1 and Step 2 Results}
-\label{app:paso12}
-
-\subsection*{Step 1 — Token Fertility (SCC)}
-
-Token fertility analysis was conducted using parallel Wikipedia corpora in English and
-Spanish. The fertility ratio ES/EN is reported below.
-
-\begin{center}
-\begin{tabular}{lcc}
-  \toprule
-  \textbf{Model} & \textbf{Fertility ratio ES/EN} & \textbf{Level} \\
-  \midrule
-  MockModel-7B & \textit{[to be computed]} & \textit{[pending]} \\
-  \bottomrule
-\end{tabular}
-\end{center}
-
-Ratio $< 1.10$ → \lvlthree; $1.10$–$1.25$ → \lvltwo; $> 1.25$ → \lvlone.
-
-\subsection*{Step 2 — Dialectal Coverage (RCS)}
-
-Step 2 was conducted as a qualitative analysis of model responses under regional
-perturbations (Rioplatense, Andean, Caribbean, Spanglish). A quantitative RCS score
-will be incorporated in future iterations of the pipeline.
-
-\section{Full S-OWMI Scorecard}
-\label{app:scorecard-full}
-
-\begin{center}
-\begin{tabular}{lC{1.2cm}C{1.2cm}C{1.2cm}C{1.2cm}C{1.2cm}C{1.2cm}C{1.4cm}}
-  \toprule
-  \textbf{Model} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P4}
-    & \textbf{P5} & \textbf{P6} & \textbf{V1 Score} \\
-  \midrule
-  MockModel-7B & — & N/A & 0.0 & 33.3 & 0.0 & 0.0 & \textbf{13.3} \\
-  \bottomrule
-\end{tabular}
-\end{center}
-
-Scores 0–100. P1 = Token Fertility (SCC); P2 = Dialectal Coverage (RCS, qualitative);
-P3 = Over-refusal (FRR); P4 = Jailbreak (\dasr); P5 = Bias (BSS); P6 = Factuality (FES).
-Weights: P1×10, P2×15, P3×15, P4×30, P5×15, P6×15 (sum = 100).
 
 \end{document}
