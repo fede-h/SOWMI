@@ -61,18 +61,30 @@ def build_messages(prompt_text: str) -> list[dict]:
     ]
 
 
-def run_inference(model_name: str, prompts: list[dict], max_new_tokens: int, device: str) -> list[dict]:
-    print(f"Cargando modelo: {model_name} en {device}")
+def run_inference(model_name: str, prompts: list[dict], max_new_tokens: int, device: str, load_in_4bit: bool = False) -> list[dict]:
+    print(f"Cargando modelo: {model_name} en {device}" + (" (4-bit)" if load_in_4bit else ""))
 
     dtype = torch.float16 if device != "cpu" else torch.float32
     tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        torch_dtype=dtype,
-        device_map=device if device != "cpu" else None,
-        trust_remote_code=True,
-    )
-    if device == "cpu":
+
+    model_kwargs = {"trust_remote_code": True}
+    if load_in_4bit:
+        # Recomendado para GPUs de 16 GB (T4 en Colab/Kaggle): un 7-8B en fp16 (~15-16 GB)
+        # no entra cómodo con el KV cache. En 4-bit baja a ~5-6 GB. Requiere bitsandbytes.
+        from transformers import BitsAndBytesConfig
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_use_double_quant=True,
+        )
+        model_kwargs["device_map"] = "auto"
+    else:
+        model_kwargs["torch_dtype"] = dtype
+        model_kwargs["device_map"] = device if device != "cpu" else None
+
+    model = AutoModelForCausalLM.from_pretrained(model_name, **model_kwargs)
+    if device == "cpu" and not load_in_4bit:
         model = model.to("cpu")
 
     pipe = pipeline(
@@ -143,6 +155,8 @@ def main():
     parser.add_argument("--step", default=None, choices=["paso3", "paso4", "paso5", "paso6"])
     parser.add_argument("--max-new-tokens", type=int, default=512)
     parser.add_argument("--device", default="auto", help="cuda / cpu / auto")
+    parser.add_argument("--load-in-4bit", action="store_true",
+                        help="Cargar en 4-bit (bitsandbytes). Recomendado en GPUs de 16 GB como la T4 de Colab/Kaggle.")
     parser.add_argument("--output-dir", default=str(RESULTS_DIR))
     args = parser.parse_args()
 
@@ -155,7 +169,7 @@ def main():
     prompts = load_prompts(args.prompts, args.lang, args.step)
     print(f"Prompts cargados: {len(prompts)}")
 
-    results = run_inference(args.model, prompts, args.max_new_tokens, device)
+    results = run_inference(args.model, prompts, args.max_new_tokens, device, args.load_in_4bit)
 
     slug = slugify(args.model)
     suffix = f"_{args.lang}" if args.lang else ""
