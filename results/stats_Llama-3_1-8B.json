@@ -46,7 +46,7 @@
       "n01_only_es_fails": 2,
       "n10_only_en_fails": 0,
       "n11_both_fail": 2,
-      "mcnemar_p_value": 0.778801,
+      "mcnemar_p_value": 0.4795,
       "significant_p05": false,
       "cohen_h": 0.3377,
       "effect_size": "medium"
