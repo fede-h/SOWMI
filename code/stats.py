@@ -53,18 +53,16 @@ def mcnemar(n01: int, n10: int) -> float:
 
 
 def chi2_to_p(chi2: float, df: int = 1) -> float:
-    """Aproximación de p-value via distribución chi2 (df=1)."""
+    """p-value (survival function) de chi2 con df=1, forma cerrada via erfc.
+
+    Para df=1: P(X > chi2) = erfc(sqrt(chi2/2)). La implementación previa
+    sumaba una serie que se telescopaba a la survival function de df=2,
+    inflando los p-values (~3x). erfc es exacto y stdlib.
+    """
     if chi2 <= 0:
         return 1.0
-    x = chi2 / 2.0
-    p = math.exp(-x)
     if df == 1:
-        term = p
-        result = p
-        for k in range(1, 30):
-            term *= x / k
-            result += term
-        return min(max(1 - result + p, 0.0), 1.0)
+        return min(max(math.erfc(math.sqrt(chi2 / 2.0)), 0.0), 1.0)
     return 1.0
 
 

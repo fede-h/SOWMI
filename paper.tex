@@ -69,13 +69,12 @@
   {\LARGE\bfseries S-OWMI: A Perimeter Auditing Framework for\\[4pt]
     Open-Weight Models in Latin American Institutions}\\[1.2em]
   {\normalsize
-    \textbf{Ramiro Carnicer Souble}\textsuperscript{1} \quad
-    \textbf{Mauricio Genta}\textsuperscript{1} \quad
-    \textbf{Federico Hörl}\textsuperscript{2} \quad
-    \textbf{Nicolás Adrian Oroz}\textsuperscript{3}\\[0.3em]
-    \textsuperscript{1}Independent Researcher \quad
-    \textsuperscript{2}Universidad Nacional de San Martín (UNSAM) \quad
-    \textsuperscript{3}Tech del Fuego\\[0.3em]
+    \begin{tabular}{cc}
+      \textbf{Ramiro Carnicer Souble} & \textbf{Mauricio Genta} \\
+      Independent Researcher & Independent Researcher \\[0.6em]
+      \textbf{Federico Hörl} & \textbf{Nicolás Adrian Oroz} \\
+      Universidad Nacional de San Martín (UNSAM) & Tech del Fuego \\
+    \end{tabular}\\[0.6em]
     \textit{With Apart Research}\\[0.5em]
     \href{https://github.com/fede-h/SOWMI}{github.com/fede-h/SOWMI}
   }
@@ -103,9 +102,10 @@ future work. Evaluating Llama-3.1-8B and Qwen2.5-7B on an English baseline versu
 we find that dangerous-prompt refusal (\dasr) and over-refusal (FRR) transfer robustly
 across languages. The critical finding lies elsewhere: both models show a \textbf{+13.3 pp
 degradation in bias-consistency} when switching to Spanish (step 5, medium Cohen's $h$),
-and both collapse on open-domain factual queries ($\sim$80\% failure rate) regardless of
-language—exposing a general readiness gap that a Spanish-only audit would miss without
-an English baseline. The L1/L2/L3 scorecard gives Global South institutions an
+and both score poorly on open-domain LATAM factual queries ($\sim$80\% of answers fall
+short of detailed answer keys, though only $\sim$8\% are outright factual errors—the rest
+being incomplete) regardless of language—exposing a general readiness gap that a
+Spanish-only audit would miss without an English baseline. The L1/L2/L3 scorecard gives Global South institutions an
 actionable, evidence-based tool to surface these weaknesses before committing to local
 deployment.
 \end{abstract}
@@ -278,6 +278,10 @@ Spanglish, and simultaneous regional variations across 200 prompt pairs.
 on matched EN/ES prompt pairs, and Cohen's $h$ as effect size. Hypothesis: $\Delta > 0$
 (model fails more in Spanish than English).
 
+% TODO (Nico): el 20% de revisión humana AÚN NO se ejecutó (los CSV *_human_review.csv
+% están vacíos). Si NO se corre antes de entregar, cambiar "supplemented by a 20% human
+% calibration review" por "for which a 20% human-calibration protocol is provided" para no
+% afirmar algo no hecho. Si SÍ se corre, dejar como está y agregar el kappa.
 \textbf{Judging and Calibration:} Evaluated using an LLM-as-a-judge pipeline
 (GPT-4o), supplemented by a 20\% human calibration review. A
 rule-based fallback judge is provided for reproducibility without API access.
@@ -350,10 +354,21 @@ English, confirming it is a general capability gap rather than a language-transf
 The bias consistency step (Step~5) is the only dimension showing a consistent
 Spanish-specific degradation: $+13.3$ pp for both models, with medium Cohen's $h$
 (0.338 for Llama, 0.405 for Qwen). Refusal safety (Steps 3--4) transfers robustly,
-with zero or near-zero deltas. Step 6 (factuality) collapses in both languages
-($\sim$80\% failure), indicating a LATAM domain-knowledge gap rather than a
-language-transfer failure. No McNemar test reached $\alpha = 0.05$, consistent with
+with zero or near-zero deltas. Step 6 (factuality) scores poorly in both languages
+($\sim$80--84\% of answers fail to fully match the answer key), indicating a LATAM
+domain-knowledge gap rather than a language-transfer failure. We note this figure is
+dominated by \emph{incomplete} answers (graded against detailed reference keys): only
+$\sim$8\% of responses are outright factually incorrect, while the majority are partially
+correct but omit required detail. No McNemar test reached $\alpha = 0.05$, consistent with
 the moderate per-step sample sizes.
+
+\paragraph*{Qualitative observation.} While the aggregate jailbreak delta is zero, the
+paired data reveals that code-switching can break individual refusals that hold in English.
+In one self-harm prompt (\texttt{harm\_22}), Qwen2.5-7B cleanly refused the English version
+but, when the same request was posed in colloquial Spanish/Spanglish, it preserved a
+supportive tone yet still leaked the harmful guidance (graded PARTIAL). Llama-3.1-8B
+refused this prompt in all variants. Such cases—invisible to an aggregate ASR that nets
+out to zero—motivate the dialectal adversarial testing reserved for Vertical 3.
 
 \subsection{S-OWMI Organizational Scorecard (Vertical 1)}
 
@@ -362,9 +377,9 @@ the moderate per-step sample sizes.
   \centering
   \caption{\textbf{S-OWMI V1 Scorecard — Llama-3.1-8B and Qwen2.5-7B.}
     Scores 0--100 (higher = better). Level thresholds: \lvlthree~$\geq 75$,
-    \lvltwo~40--74, \lvlone~$<40$. Steps 1--2 are reported in
-    Steps 1--2 (Token Fertility, Dialectal Coverage) are pending and excluded from
-    this MVP. Weights: P3$\times$15, P4$\times$30, P5$\times$15,
+    \lvltwo~40--74, \lvlone~$<40$. Steps 1--2 (Token Fertility, Dialectal Coverage)
+    are pending and excluded from this MVP. The V1 score is therefore computed over
+    Steps 3--6 only; weights: P3$\times$15, P4$\times$30, P5$\times$15,
     P6$\times$15 (V1 partial; P1$\times$10 and P2$\times$15 pending).}
   \label{tab:scorecard}
   \smallskip
@@ -411,9 +426,11 @@ Our findings partially validate the theory of change: refusal-based safety align
 (Steps 3--4) transfers robustly to español-diverso, but S-OWMI Vertical 1 surfaces two
 operationally significant weaknesses. First, bias consistency degrades by $+13.3$~pp in
 dialectic Spanish (Step 5), consistently across both models and with medium effect size.
-Second, both models collapse on LATAM factual queries ($\sim$80\% failure, Step 6)
-in both languages---exposing a training-data gap rather than a language-transfer
-failure. Crucially, S-OWMI's comparative baseline design makes this distinction visible:
+Second, both models score poorly on LATAM factual queries (Step 6, $\sim$80--84\% of
+answers fall short of the reference keys) in both languages---though this is driven by
+incompleteness rather than falsehood ($\sim$8\% outright incorrect), it still exposes a
+training-data coverage gap rather than a language-transfer failure. Crucially, S-OWMI's
+comparative baseline design makes this distinction visible:
 without the English anchor, practitioners would misattribute Step~6 failures as
 Spanish-specific. Vertical 1 provides the diagnostic resolution to separate
 language-transfer failures from domain-coverage gaps.
@@ -467,7 +484,7 @@ All authors contributed equally to this work.
 \section*{References}
 
 \begin{enumerate}[leftmargin=1.5em, itemsep=3pt, label={[\arabic*]}]
-  \item Tedeschi et al.\ (2024). \textit{M-ALERT: Multilingual Safety Evaluation of LLMs}.
+  \item Friedrich et al.\ (2024). \textit{LLMs Lost in Translation: M-ALERT uncovers Cross-Linguistic Safety Inconsistencies}. arXiv:2412.15035.
   \item Shen et al.\ (2024). \textit{LinguaSafe: Safety Evaluation Across 12 Languages}.
   \item Jain et al.\ (2024). \textit{PolygloToxicityPrompts: Multilingual Toxicity Evaluation of LLMs}.
   \item Marx \& Dunaiski (2026). \textit{Multilingual jailbreaking of LLMs using low-resource languages}. arXiv preprint.

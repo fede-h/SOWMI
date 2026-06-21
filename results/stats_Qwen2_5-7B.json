@@ -30,7 +30,7 @@
       "n01_only_es_fails": 1,
       "n10_only_en_fails": 1,
       "n11_both_fail": 1,
-      "mcnemar_p_value": 0.778801,
+      "mcnemar_p_value": 0.4795,
       "significant_p05": false,
       "cohen_h": 0.0,
       "effect_size": "small"
@@ -46,7 +46,7 @@
       "n01_only_es_fails": 2,
       "n10_only_en_fails": 0,
       "n11_both_fail": 1,
-      "mcnemar_p_value": 0.778801,
+      "mcnemar_p_value": 0.4795,
       "significant_p05": false,
       "cohen_h": 0.405,
       "effect_size": "medium"
@@ -62,7 +62,7 @@
       "n01_only_es_fails": 1,
       "n10_only_en_fails": 1,
       "n11_both_fail": 20,
-      "mcnemar_p_value": 0.778801,
+      "mcnemar_p_value": 0.4795,
       "significant_p05": false,
       "cohen_h": 0.0,
       "effect_size": "small"
