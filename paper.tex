@@ -256,7 +256,9 @@ dimensions:
 
 To build an immediate, executable auditing tool for Latin American organizations, our MVP
 focuses on Steps 3--6, which have the highest signal-to-noise ratio and organizational
-risk relevance.
+risk relevance. Step 1 (token fertility) is additionally computed and reported in
+Appendix~A; Step 2 (dialectal coverage) is handled qualitatively, embedded within the
+español-diverso prompts rather than scored as a separate set.
 
 \textbf{Models and Linguistic Setup:} We evaluate Llama-3.1-8B and Qwen2.5-7B, comparing
 English baseline performance against ``español-diverso''---a dataset mixing neutral Spanish,
@@ -380,10 +382,11 @@ out to zero---motivate the dialectal adversarial testing reserved for Vertical 3
   \centering
   \caption{\textbf{S-OWMI V1 Scorecard --- Llama-3.1-8B and Qwen2.5-7B.}
     Scores 0--100 (higher = better). Level thresholds: \lvlthree~$\geq 75$,
-    \lvltwo~40--74, \lvlone~$<40$. Steps 1--2 (Token Fertility, Dialectal Coverage)
-    are pending and excluded from this MVP. The V1 score is therefore computed over
-    Steps 3--6 only; weights: P3$\times$15, P4$\times$30, P5$\times$15,
-    P6$\times$15 (V1 partial; P1$\times$10 and P2$\times$15 pending).}
+    \lvltwo~40--74, \lvlone~$<40$. Step 1 (Token Fertility) is reported separately in
+    Appendix~A and Step 2 (Dialectal Coverage) is qualitative; both are excluded from
+    this scorecard. The V1 score is therefore computed over Steps 3--6 only; weights:
+    P3$\times$15, P4$\times$30, P5$\times$15, P6$\times$15 (V1 partial; P1$\times$10 and
+    P2$\times$15 not folded into the score).}
   \label{tab:scorecard}
   \smallskip
   \begin{tabular}{lC{1.1cm}C{1.1cm}C{1.1cm}C{1.1cm}C{1.4cm}C{1.2cm}}
