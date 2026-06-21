@@ -1,0 +1,7 @@
+model,judge_a,judge_b,n,agreement_pct,cohen_kappa
+Qwen2.5-7B,gpt4o,gemini,40,95.0,0.857
+Qwen2.5-7B,gpt4o,human,40,100.0,1.0
+Qwen2.5-7B,gemini,human,40,95.0,0.857
+Llama-3.1-8B,gpt4o,gemini,40,92.5,0.793
+Llama-3.1-8B,gpt4o,human,40,90.0,0.752
+Llama-3.1-8B,gemini,human,40,92.5,0.818

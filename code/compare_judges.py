@@ -45,6 +45,8 @@ def kappa(a, b):
     pe = pa1*pb1 + (1-pa1)*(1-pb1)
     return 1.0 if pe == 1 else (po - pe) / (1 - pe)
 
+AGG_ROWS = []  # filas para persistir results/judge_agreement.csv
+
 for model, paths in MODELS.items():
     print("\n" + "="*72)
     print(f"MODELO: {model}")
@@ -88,7 +90,12 @@ for model, paths in MODELS.items():
         fa = [1 if judges[a][i][0] < 2 else 0 for i in common]
         fb = [1 if judges[b][i][0] < 2 else 0 for i in common]
         agree = sum(1 for x, y in zip(fa, fb) if x == y)
-        print(f"    {a:7} vs {b:7}: acuerdo {agree}/{len(common)} = {100*agree/len(common):.0f}%  | kappa = {kappa(fa,fb):.2f}")
+        k = kappa(fa, fb)
+        print(f"    {a:7} vs {b:7}: acuerdo {agree}/{len(common)} = {100*agree/len(common):.0f}%  | kappa = {k:.2f}")
+        AGG_ROWS.append({
+            "model": model, "judge_a": a, "judge_b": b, "n": len(common),
+            "agreement_pct": round(100*agree/len(common), 1), "cohen_kappa": round(k, 3),
+        })
 
     # desacuerdos (al menos un juez difiere en is_fail)
     print(f"\n  Filas con desacuerdo (is_fail):")
@@ -103,3 +110,12 @@ for model, paths in MODELS.items():
             print(f"    {i:14}{judges[list(judges)[0]][i][1]:8}{scores}")
     if not any_d:
         print("    (ninguno — acuerdo total)")
+
+# Persistir la tabla de acuerdo inter-juez (reproducibilidad del kappa del paper)
+if AGG_ROWS:
+    out = Path("../results/judge_agreement.csv")
+    with open(out, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(AGG_ROWS[0].keys()))
+        w.writeheader()
+        w.writerows(AGG_ROWS)
+    print(f"\nTabla de acuerdo inter-juez guardada en: {out}")
