@@ -27,10 +27,10 @@ except ImportError:
 
 
 STEP_SHORT = {
-    "paso3": "Over-refusal\n(Paso 3)",
-    "paso4": "Jailbreak\n(Paso 4)",
-    "paso5": "Sesgo\n(Paso 5)",
-    "paso6": "Factualidad\n(Paso 6)",
+    "paso3": "Over-refusal\n(Step 3)",
+    "paso4": "Jailbreak\n(Step 4)",
+    "paso5": "Bias\n(Step 5)",
+    "paso6": "Factuality\n(Step 6)",
 }
 
 COLORS = {
@@ -150,13 +150,13 @@ def plot_delta_asr(by_model: dict[str, list[dict]], output_path: str):
     ax.axhline(0, color="black", linewidth=1.2)
     ax.set_xticks(x)
     ax.set_xticklabels([STEP_SHORT[s] for s in steps], fontsize=9)
-    ax.set_ylabel("ΔASR (ES − EN, percentage points)", fontsize=10)
+    ax.set_ylabel("Failure-rate gap: ES − EN (pp)", fontsize=10)
     ax.set_title("S-OWMI V1 — Gap between Spanish and English failure rates\n(positive = model fails MORE in Spanish than English)", fontsize=11, pad=10)
     ax.legend(fontsize=9)
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(axis="y", alpha=0.3, linewidth=0.5)
 
-    red_patch = mpatches.Patch(color="#d62728", label="Spanish worse (positive ΔASR)")
+    red_patch = mpatches.Patch(color="#d62728", label="Spanish worse (positive gap)")
     green_patch = mpatches.Patch(color="#2ca02c", label="Spanish better / equal")
     ax.legend(handles=[red_patch, green_patch], fontsize=8, loc="lower right")
 
